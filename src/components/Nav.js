@@ -11,7 +11,7 @@ class Navbar extends Component {
 					target='_blank'
 					rel='noopener noreferrer'
 				>
-					Dapp Boilerplate
+					CryptoKitties Analyzer
 				</a>
 				<ul className='navbar-nav'>
 					<li className='nav-item text-nowrap mr-2 d-none d-sm-none d-sm-block'>
