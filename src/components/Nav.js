@@ -15,7 +15,19 @@ class Navbar extends Component {
 				</a>
 				<ul className='navbar-nav'>
 					<li className='nav-item text-nowrap mr-2 d-none d-sm-none d-sm-block'>
-						<small className='text-secondary'>{this.props.account}</small>
+						{this.props.account == null ? (
+							<button
+								className='text-secondary'
+								onClick={async () => {
+									let account = await this.props.loadAccount();
+									this.props.accountStateHandler(account);
+								}}
+							>
+								Connect
+							</button>
+						) : (
+							<small className='text-secondary'>{this.props.account}</small>
+						)}
 					</li>
 				</ul>
 			</nav>

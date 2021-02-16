@@ -14,7 +14,6 @@ const CryptoKittiesAddress = '0x06012c8cf97bead5deae237070f9587f8e7a266d';
 class App extends Component {
 	async componentWillMount() {
 		// load web3, account, and smart contract data
-		await this.loadAccount();
 		await this.loadBlockchainData();
 		await this.getBirths();
 	}
@@ -30,10 +29,13 @@ class App extends Component {
 			window.alert('Non-Ethereum browser detected. You should consider trying MetaMask!');
 		}
 		// load accounts
-		const web3 = new Web3(window.ethereum);
-		const accounts = await web3.eth.getAccounts();
-		this.setState({ account: accounts[0] });
+		const accounts = await window.web3.eth.getAccounts();
+		return accounts[0];
 	}
+
+	accountStateHandler = async (account) => {
+		this.setState({ account });
+	};
 
 	// load smart contract data
 	async loadBlockchainData() {
@@ -42,9 +44,9 @@ class App extends Component {
 		// load smart contract
 		const cryptoKittiesContract = new web3.eth.Contract(CryptoKittiesAbi, CryptoKittiesAddress);
 		this.setState({ cryptoKittiesContract });
-		const name = await this.state.cryptoKittiesContract.methods.name().call();
+		const name = await cryptoKittiesContract.methods.name().call();
 		this.setState({ name });
-		const totalSupply = await this.state.cryptoKittiesContract.methods.totalSupply().call();
+		const totalSupply = await cryptoKittiesContract.methods.totalSupply().call();
 		this.setState({ totalSupply: parseInt(totalSupply._hex) });
 	}
 
@@ -80,9 +82,9 @@ class App extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			account: '',
+			account: null,
 			cryptoKittiesContract: null,
-			name: '',
+			name: null,
 			startingBlock: 11838307,
 			endingBlock: 11845776,
 			birthedKittiesArray: null,
@@ -93,7 +95,11 @@ class App extends Component {
 	render() {
 		return (
 			<div>
-				<Navbar account={this.state.account} />
+				<Navbar
+					account={this.state.account}
+					loadAccount={this.loadAccount}
+					accountStateHandler={this.accountStateHandler}
+				/>
 				<Main
 					cryptoKittiesContract={this.state.cryptoKittiesContract}
 					name={this.state.name}
