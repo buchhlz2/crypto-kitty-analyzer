@@ -12,7 +12,7 @@ class Navbar extends Component {
 					<li className='nav-item text-nowrap mr-2 d-none d-sm-none d-sm-block'>
 						{this.props.account == null ? (
 							<button
-								className='text-secondary'
+								className='btn btn-secondary btn-sm'
 								onClick={async () => {
 									let account = await this.props.loadAccount();
 									this.props.accountStateHandler(account);

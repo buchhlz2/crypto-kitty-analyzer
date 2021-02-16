@@ -14,21 +14,41 @@ const CryptoKittiesAddress = '0x06012c8cf97bead5deae237070f9587f8e7a266d';
 class App extends Component {
 	async componentWillMount() {
 		// load web3, account, and smart contract data
+		await this.checkIfAccountConnected();
 		await this.loadBlockchainData();
 	}
 
-	// inject web3 into browser or check if it already exists (for legacy dapps)
-	async loadAccount() {
+	// check if user wallet has already authorized app before
+	async checkIfAccountConnected() {
+		let web3;
 		if (window.ethereum) {
-			window.web3 = new Web3(window.ethereum);
-			await window.ethereum.enable();
+			web3 = new Web3(window.ethereum);
 		} else if (window.web3) {
-			window.web3 = new Web3(window.web3.currentProvider);
+			web3 = new Web3(window.web3.currentProvider);
 		} else {
 			window.alert('Non-Ethereum browser detected. You should consider trying MetaMask!');
 		}
 		// load accounts
-		const accounts = await window.web3.eth.getAccounts();
+		const accounts = await web3.eth.getAccounts();
+		if (accounts) {
+			this.setState({ account: accounts[0] });
+		}
+	}
+
+	// load user wallet when user clicks `Connect` button in Navbar
+	// instantiate web3 using window.ethereum or check if it already exists (for legacy dapps)
+	async loadAccount() {
+		let web3;
+		if (window.ethereum) {
+			web3 = new Web3(window.ethereum);
+			await window.ethereum.enable();
+		} else if (window.web3) {
+			web3 = new Web3(window.web3.currentProvider);
+		} else {
+			window.alert('Non-Ethereum browser detected. You should consider trying MetaMask!');
+		}
+		// load accounts
+		const accounts = await web3.eth.getAccounts();
 		return accounts[0];
 	}
 
@@ -91,6 +111,7 @@ class App extends Component {
 			toBlock: null,
 			birthedKittiesArray: null,
 			numberOfBirthedKitties: null,
+			matronWithMaxBirths: null,
 		};
 	}
 
@@ -112,6 +133,7 @@ class App extends Component {
 					toBlock={this.state.toBlock}
 					queryCryptoKitties={this.queryCryptoKitties}
 					queryCryptoKittiesStateHandler={this.queryCryptoKittiesStateHandler}
+					matronWithMaxBirths={this.state.matronWithMaxBirths}
 				/>
 			</div>
 		);
