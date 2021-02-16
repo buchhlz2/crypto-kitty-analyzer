@@ -18,18 +18,12 @@ class QueryForm extends Component {
 									toBlock
 								);
 
-								this.props.queryCryptoKittiesStateHandler([
-									fromBlock,
-									toBlock,
-									birthedKittiesArray,
-								]);
+								this.props.queryCryptoKittiesStateHandler([fromBlock, toBlock, birthedKittiesArray]);
 							}}
 						>
 							<div className='form-row'>
 								<div className='form-group col-md-6'>
-									<label htmlFor='fromBlock'>
-										Starting Block
-									</label>
+									<label htmlFor='fromBlock'>Starting Block</label>
 									<input
 										className='form-control'
 										id='fromBlock'
@@ -57,10 +51,7 @@ class QueryForm extends Component {
 							</div>
 							<div className='form-row'>
 								<div className='form-group col text-center'>
-									<button
-										type='submit'
-										className='btn btn-primary'
-									>
+									<button type='submit' className='btn btn-primary'>
 										Query
 									</button>
 								</div>

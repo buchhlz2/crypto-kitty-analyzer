@@ -6,11 +6,7 @@ class Main extends Component {
 		return (
 			<div className='container-fluid mt-5'>
 				<div className='row'>
-					<main
-						role='main'
-						className='col-lg-12 ml-auto mr-auto'
-						style={{ maxWidth: '500px' }}
-					>
+					<main role='main' className='col-lg-12 ml-auto mr-auto' style={{ maxWidth: '500px' }}>
 						<div className='row'>
 							<div className='content mr-auto ml-auto'>
 								<h3 className='text-center'>Metadata:</h3>
@@ -22,9 +18,7 @@ class Main extends Component {
 										</tr>
 										<tr>
 											<td>{this.props.name}</td>
-											<td>
-												{this.props.totalSupply}
-											</td>
+											<td>{this.props.totalSupply}</td>
 										</tr>
 									</tbody>
 								</table>
@@ -33,9 +27,7 @@ class Main extends Component {
 						<QueryForm
 							cryptoKittiesContract={this.props.cryptoKittiesContract}
 							queryCryptoKitties={this.props.queryCryptoKitties}
-							queryCryptoKittiesStateHandler={
-								this.props.queryCryptoKittiesStateHandler
-							}
+							queryCryptoKittiesStateHandler={this.props.queryCryptoKittiesStateHandler}
 						/>
 						<QueryResults
 							fromBlock={this.props.fromBlock}
