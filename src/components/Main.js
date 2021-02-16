@@ -1,58 +1,49 @@
 import React, { Component } from 'react';
-
+import QueryForm from './QueryForm.js';
+import QueryResults from './QueryResults.js';
 class Main extends Component {
 	render() {
 		return (
 			<div className='container-fluid mt-5'>
-				<h3 className='text-center'>Metadata:</h3>
-				<table>
-					<tbody>
-						<tr>
-							<th>Contract Name</th>
-							<th>Total Supply</th>
-						</tr>
-						<tr>
-							<td>{this.props.name}</td>
-							<td>{this.props.totalSupply}</td>
-						</tr>
-					</tbody>
-				</table>
-				<h3 className='text-center'>Query Data:</h3>
-				<table>
-					<tbody>
-						<tr>
-							<th>Start Block</th>
-							<th>End Block</th>
-							<th>Number of Kitties</th>
-						</tr>
-						<tr>
-							<td>{this.props.fromBlock}</td>
-							<td>{this.props.toBlock}</td>
-							<td>{this.props.numberOfBirthedKitties}</td>
-						</tr>
-					</tbody>
-				</table>
-				<button
-					className='text-secondary'
-					onClick={async () => {
-						let fromBlock = 11838307;
-						let toBlock = 11845776;
-						let birthedKittiesArray = await this.props.queryCryptoKitties(
-							this.props.cryptoKittiesContract,
-							fromBlock,
-							toBlock
-						);
-						console.log(birthedKittiesArray);
-
-						this.props.queryCryptoKittiesHandler([
-							fromBlock,
-							toBlock,
-							birthedKittiesArray,
-						]);
-					}}
-				>
-					Query
-				</button>
+				<div className='row'>
+					<main
+						role='main'
+						className='col-lg-12 ml-auto mr-auto'
+						style={{ maxWidth: '500px' }}
+					>
+						<div className='row'>
+							<div className='content mr-auto ml-auto'>
+								<h3 className='text-center'>Metadata:</h3>
+								<table>
+									<tbody>
+										<tr>
+											<th>Contract Name</th>
+											<th>Total Supply</th>
+										</tr>
+										<tr>
+											<td>{this.props.name}</td>
+											<td>
+												{this.props.totalSupply}
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+						<QueryForm
+							cryptoKittiesContract={this.props.cryptoKittiesContract}
+							queryCryptoKitties={this.props.queryCryptoKitties}
+							queryCryptoKittiesStateHandler={
+								this.props.queryCryptoKittiesStateHandler
+							}
+						/>
+						<QueryResults
+							fromBlock={this.props.fromBlock}
+							toBlock={this.props.toBlock}
+							numberOfBirthedKitties={this.props.numberOfBirthedKitties}
+						/>
+					</main>
+				</div>
 			</div>
 		);
 	}

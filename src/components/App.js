@@ -49,10 +49,7 @@ class App extends Component {
 		this.setState({ totalSupply: parseInt(totalSupply._hex) });
 	}
 
-	// query Eth mainnet for user-specfied startingBlock and endingBlock
-	// looking for event `Birth()`
-	// `fromBlock` and `toBlock` are currently set to static values over a ~24 hour period
-	// @dev change this to user input and also update state
+	// query Eth mainnet for event `Birth()` using user-specfied startingBlock and endingBlock
 	async queryCryptoKitties(contract, fromBlock, toBlock) {
 		let birthedKittiesArray;
 		await contract.getPastEvents('Birth', { fromBlock, toBlock }, (error, data) => {
@@ -70,7 +67,7 @@ class App extends Component {
 		// return the matron with most births (inclue birth timestamp, generation, & their genes)
 	}
 
-	queryCryptoKittiesHandler = async ([fromBlock, toBlock, birthedKittiesArray]) => {
+	queryCryptoKittiesStateHandler = async ([fromBlock, toBlock, birthedKittiesArray]) => {
 		// save fromBlock and toBlock
 		this.setState({ fromBlock });
 		this.setState({ toBlock });
@@ -114,7 +111,7 @@ class App extends Component {
 					fromBlock={this.state.fromBlock}
 					toBlock={this.state.toBlock}
 					queryCryptoKitties={this.queryCryptoKitties}
-					queryCryptoKittiesHandler={this.queryCryptoKittiesHandler}
+					queryCryptoKittiesStateHandler={this.queryCryptoKittiesStateHandler}
 				/>
 			</div>
 		);
