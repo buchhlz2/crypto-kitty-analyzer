@@ -26,12 +26,33 @@ class Main extends Component {
 							<th>Number of Kitties</th>
 						</tr>
 						<tr>
-							<td>{this.props.startingBlock}</td>
-							<td>{this.props.endingBlock}</td>
+							<td>{this.props.fromBlock}</td>
+							<td>{this.props.toBlock}</td>
 							<td>{this.props.numberOfBirthedKitties}</td>
 						</tr>
 					</tbody>
 				</table>
+				<button
+					className='text-secondary'
+					onClick={async () => {
+						let fromBlock = 11838307;
+						let toBlock = 11845776;
+						let birthedKittiesArray = await this.props.queryCryptoKitties(
+							this.props.cryptoKittiesContract,
+							fromBlock,
+							toBlock
+						);
+						console.log(birthedKittiesArray);
+
+						this.props.queryCryptoKittiesHandler([
+							fromBlock,
+							toBlock,
+							birthedKittiesArray,
+						]);
+					}}
+				>
+					Query
+				</button>
 			</div>
 		);
 	}

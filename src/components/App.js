@@ -4,7 +4,7 @@ Objective is to build a program that takes a `startingBlock` and `endingBlock` a
 
 import React, { Component } from 'react';
 import Web3 from 'web3';
-import Navbar from './Nav';
+import Navbar from './Navbar';
 import Main from './Main';
 import './App.css';
 
@@ -15,7 +15,6 @@ class App extends Component {
 	async componentWillMount() {
 		// load web3, account, and smart contract data
 		await this.loadBlockchainData();
-		await this.getBirths();
 	}
 
 	// inject web3 into browser or check if it already exists (for legacy dapps)
@@ -37,7 +36,7 @@ class App extends Component {
 		this.setState({ account });
 	};
 
-	// load smart contract data
+	// instantiate smart contract & load metadata
 	async loadBlockchainData() {
 		const web3 = new Web3(`wss://mainnet.infura.io/ws/v3/${infuraProjectId}`);
 
@@ -54,30 +53,36 @@ class App extends Component {
 	// looking for event `Birth()`
 	// `fromBlock` and `toBlock` are currently set to static values over a ~24 hour period
 	// @dev change this to user input and also update state
-	async getBirths() {
+	async queryCryptoKitties(contract, fromBlock, toBlock) {
 		let birthedKittiesArray;
-		await this.state.cryptoKittiesContract.getPastEvents(
-			'Birth',
-			{ fromBlock: this.state.startingBlock, toBlock: this.state.endingBlock },
-			(error, data) => {
-				if (error) {
-					console.error(error);
-				}
-				console.log('Birth event data:');
-				console.log(data);
-				birthedKittiesArray = data;
+		await contract.getPastEvents('Birth', { fromBlock, toBlock }, (error, data) => {
+			if (error) {
+				console.error(error);
 			}
-		);
-		// save the Birth() event data to an array
-		this.setState({ birthedKittiesArray: birthedKittiesArray });
-		console.log(this.state.birthedKittiesArray);
-		// save the lendth of the `birthedKittiesArray` to state
-		this.setState({ numberOfBirthedKitties: birthedKittiesArray.length });
-		console.log(this.state.numberOfBirthedKitties);
+			console.log('Birth event data:');
+			console.log(data);
+			birthedKittiesArray = data;
+		});
+		// return the Birth() event data as an array
+		return birthedKittiesArray;
 
 		// search each result from `birthedKittiesArray` by returnValues.matronId
 		// return the matron with most births (inclue birth timestamp, generation, & their genes)
 	}
+
+	queryCryptoKittiesHandler = async ([fromBlock, toBlock, birthedKittiesArray]) => {
+		// save fromBlock and toBlock
+		this.setState({ fromBlock });
+		this.setState({ toBlock });
+		// save the Birth() event data to an array
+		this.setState({
+			birthedKittiesArray,
+		});
+		// save the length of the `birthedKittiesArray` to state
+		this.setState({
+			numberOfBirthedKitties: birthedKittiesArray.length,
+		});
+	};
 
 	constructor(props) {
 		super(props);
@@ -85,8 +90,8 @@ class App extends Component {
 			account: null,
 			cryptoKittiesContract: null,
 			name: null,
-			startingBlock: 11838307,
-			endingBlock: 11845776,
+			fromBlock: null,
+			toBlock: null,
 			birthedKittiesArray: null,
 			numberOfBirthedKitties: null,
 		};
@@ -106,8 +111,10 @@ class App extends Component {
 					totalSupply={this.state.totalSupply}
 					birthedKittiesArray={this.state.birthedKittiesArray}
 					numberOfBirthedKitties={this.state.numberOfBirthedKitties}
-					startingBlock={this.state.startingBlock}
-					endingBlock={this.state.endingBlock}
+					fromBlock={this.state.fromBlock}
+					toBlock={this.state.toBlock}
+					queryCryptoKitties={this.queryCryptoKitties}
+					queryCryptoKittiesHandler={this.queryCryptoKittiesHandler}
 				/>
 			</div>
 		);
