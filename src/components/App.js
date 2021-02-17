@@ -82,9 +82,6 @@ class App extends Component {
 		});
 		// return the Birth() event data as an array
 		return birthedKittiesArray;
-
-		// search each result from `birthedKittiesArray` by returnValues.matronId
-		// return the matron with most births (inclue birth timestamp, generation, & their genes)
 	}
 
 	queryCryptoKittiesStateHandler = async ([fromBlock, toBlock, birthedKittiesArray]) => {
@@ -92,14 +89,22 @@ class App extends Component {
 		this.setState({ fromBlock });
 		this.setState({ toBlock });
 		// save the Birth() event data to an array
-		this.setState({
-			birthedKittiesArray,
-		});
+		this.setState({ birthedKittiesArray });
 		// save the length of the `birthedKittiesArray` to state
-		this.setState({
-			numberOfBirthedKitties: birthedKittiesArray.length,
-		});
+		this.setState({ numberOfBirthedKitties: birthedKittiesArray.length });
+		// this.calculateMatronWithMaxBirths();
 	};
+
+	// search each result from `birthedKittiesArray` by returnValues.matronId
+	// return the matron with most births (inclue birth timestamp, generation, & their genes)
+	// @dev pausing develpment on this -- must fix query limit size when calling Infura
+	/*
+	async calculateMatronWithMaxBirths() {
+		let matronId = await this.state.birthedKittiesArray[0].returnValues.matronId._hex;
+		let matronData = await this.state.cryptoKittiesContract.methods.getKitty(matronId).call();
+		console.log(matronData);
+	}
+    */
 
 	constructor(props) {
 		super(props);
