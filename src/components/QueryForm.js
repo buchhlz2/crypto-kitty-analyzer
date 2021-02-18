@@ -8,17 +8,12 @@ class QueryForm extends Component {
 					<div className='content mr-auto ml-auto'>
 						<h3 className='text-center'>Query Form:</h3>
 						<form
-							onSubmit={async (event) => {
+							onSubmit={(event) => {
 								event.preventDefault();
-								const fromBlock = this.fromBlock.value;
-								const toBlock = this.toBlock.value;
-								let birthedKittiesArray = await this.props.queryCryptoKitties(
-									this.props.cryptoKittiesContract,
-									fromBlock,
-									toBlock
-								);
+								const fromBlock = parseInt(this.fromBlock.value);
+								const toBlock = parseInt(this.toBlock.value);
 
-								this.props.queryCryptoKittiesStateHandler([fromBlock, toBlock, birthedKittiesArray]);
+								this.props.blockQueryRangeStateHandler([fromBlock, toBlock]);
 							}}
 						>
 							<div className='form-row'>

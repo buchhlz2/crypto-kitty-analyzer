@@ -10,25 +10,23 @@ class Main extends Component {
 						<div className='row'>
 							<div className='content mr-auto ml-auto'>
 								<h3 className='text-center'>Metadata:</h3>
-								<table>
-									<tbody>
-										<tr>
-											<th>Contract Name</th>
-											<th>Total Supply</th>
-										</tr>
-										<tr>
-											<td>{this.props.name}</td>
-											<td>{this.props.totalSupply}</td>
-										</tr>
-									</tbody>
-								</table>
+								<div className='table-responsive'>
+									<table className='table'>
+										<tbody>
+											<tr>
+												<th scope='col'>Contract Name</th>
+												<th scope='col'>Total Supply</th>
+											</tr>
+											<tr>
+												<td>{this.props.name}</td>
+												<td>{this.props.totalSupply}</td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
 							</div>
 						</div>
-						<QueryForm
-							cryptoKittiesContract={this.props.cryptoKittiesContract}
-							queryCryptoKitties={this.props.queryCryptoKitties}
-							queryCryptoKittiesStateHandler={this.props.queryCryptoKittiesStateHandler}
-						/>
+						<QueryForm blockQueryRangeStateHandler={this.props.blockQueryRangeStateHandler} />
 						<QueryResults
 							fromBlock={this.props.fromBlock}
 							toBlock={this.props.toBlock}

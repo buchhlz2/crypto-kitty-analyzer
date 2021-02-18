@@ -1,5 +1,8 @@
 /*
-Objective is to build a program that takes a `startingBlock` and `endingBlock` as arguments and counts the total number of births that happened during that range. Finally, use that information to find the Kitty (birth timestamp, generation and their genes) that gave birth to the most kitties.
+    Objective is to build a program that takes a `startingBlock` and `endingBlock` as arguments 
+    and counts the total number of births that happened during that range. Finally, use that 
+    information to find the Kitty (birth timestamp, generation and their genes) that gave birth 
+    to the most kitties.
 */
 
 import React, { Component } from 'react';
@@ -70,29 +73,66 @@ class App extends Component {
 	}
 
 	// query Eth mainnet for event `Birth()` using user-specfied startingBlock and endingBlock
-	async queryCryptoKitties(contract, fromBlock, toBlock) {
+	// @dev must create pagination-type feature since Infura does not allow more than 10000 query results
+	/*
+        DESIGN
+        Based on sample event history, every ~10k blocks should have less then 10k events returned.
+        Thus, the query should first at least attempt if the event data can be returned. If the '10000 results'
+        error is thrown via Infura, then you must iterate by every 10k blocks, starting at `fromBlock` and ending 
+        at `toBlock` -- each iteration should add to the `birthedKittiesArray`.
+        
+        Once the querying is complete, then all calculated data must be, well, calculated -- this will require
+         some refactoring of `queryCryptoKitties`, its state handler, and a separate a new function for calculations.
+    */
+	// @dev This makes no sense -- the `else` block is identical to the `if` block...but returns empty results
+	// Namely, if the `else` block direcly calls `fromBlock` & `toBlock`, it will work
+	// However, it fails when using `currentFromBlock` & `currentToBlock`, as the code is currently shown
+	// ...event though `currentFromBlock` & `currentToBlock` arent assigned same values as `fromBlock` & `toBlock`
+	// The goal for the `else` block is to chunk a range from `fromBlock` to `toBlock` by 10k blocks and iterate
+	async queryCryptoKitties(fromBlock, toBlock) {
 		let birthedKittiesArray;
-		await contract.getPastEvents('Birth', { fromBlock, toBlock }, (error, data) => {
-			if (error) {
-				console.error(error);
-			}
-			console.log('Birth event data:');
-			console.log(data);
-			birthedKittiesArray = data;
-		});
-		// return the Birth() event data as an array
-		return birthedKittiesArray;
+		if (toBlock - fromBlock < 10000) {
+			await this.state.cryptoKittiesContract.getPastEvents(
+				'Birth',
+				{ fromBlock, toBlock },
+				async (error, data) => {
+					console.log('Birth event data:');
+					console.log(data);
+					birthedKittiesArray = data;
+				}
+			);
+		} else {
+			// goal is to build an array or obj of chunked block ranges; then, loop & call `getPastEvents`
+			let currentFromBlock = fromBlock;
+			let currentToBlock = toBlock;
+			await this.state.cryptoKittiesContract.getPastEvents(
+				'Birth',
+				{ currentFromBlock, currentToBlock },
+				async (error, data) => {
+					if (error) {
+						console.erorr(error);
+					}
+					console.log('Birth event data:');
+					console.log(data);
+					birthedKittiesArray = data;
+				}
+			);
+		}
+
+		// save the Birth() event data to state
+		this.setState({ birthedKittiesArray: [...this.state.birthedKittiesArray, birthedKittiesArray] });
+		this.setState({ numberOfBirthedKitties: birthedKittiesArray.length });
 	}
 
-	queryCryptoKittiesStateHandler = async ([fromBlock, toBlock, birthedKittiesArray]) => {
-		// save fromBlock and toBlock
-		this.setState({ fromBlock });
-		this.setState({ toBlock });
-		// save the Birth() event data to an array
-		this.setState({ birthedKittiesArray });
-		// save the length of the `birthedKittiesArray` to state
-		this.setState({ numberOfBirthedKitties: birthedKittiesArray.length });
-		// this.calculateMatronWithMaxBirths();
+	// update state based on user input of `fromBlock` & `toBlock` from form; then, query CryptoKitties
+	blockQueryRangeStateHandler = async ([fromBlock, toBlock]) => {
+		// save fromBlock, toBlock, and Birth() event data to an array
+		if ((await fromBlock) && (await toBlock)) {
+			this.setState({ fromBlock });
+			this.setState({ toBlock });
+		}
+
+		this.queryCryptoKitties(fromBlock, toBlock);
 	};
 
 	// search each result from `birthedKittiesArray` by returnValues.matronId
@@ -109,12 +149,13 @@ class App extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
+			loading: false,
 			account: null,
 			cryptoKittiesContract: null,
 			name: null,
 			fromBlock: null,
 			toBlock: null,
-			birthedKittiesArray: null,
+			birthedKittiesArray: [],
 			numberOfBirthedKitties: null,
 			matronWithMaxBirths: null,
 		};
@@ -136,8 +177,7 @@ class App extends Component {
 					numberOfBirthedKitties={this.state.numberOfBirthedKitties}
 					fromBlock={this.state.fromBlock}
 					toBlock={this.state.toBlock}
-					queryCryptoKitties={this.queryCryptoKitties}
-					queryCryptoKittiesStateHandler={this.queryCryptoKittiesStateHandler}
+					blockQueryRangeStateHandler={this.blockQueryRangeStateHandler}
 					matronWithMaxBirths={this.state.matronWithMaxBirths}
 				/>
 			</div>
