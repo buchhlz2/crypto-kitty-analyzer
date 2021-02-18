@@ -31,6 +31,11 @@ class Main extends Component {
 							fromBlock={this.props.fromBlock}
 							toBlock={this.props.toBlock}
 							numberOfBirthedKitties={this.props.numberOfBirthedKitties}
+							matronId={this.props.matronId}
+							matronNumberOfBirthsDuringRange={this.props.matronNumberOfBirthsDuringRange}
+							matronGenes={this.props.matronGenes}
+							matronGeneration={this.props.matronGeneration}
+							matronBirthTimestamp={this.props.matronBirthTimestamp}
 						/>
 					</main>
 				</div>

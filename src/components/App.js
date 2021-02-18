@@ -120,8 +120,9 @@ class App extends Component {
 		}
 
 		// save the Birth() event data to state
-		this.setState({ birthedKittiesArray: [...this.state.birthedKittiesArray, birthedKittiesArray] });
+		this.setState({ birthedKittiesArray: [...birthedKittiesArray] });
 		this.setState({ numberOfBirthedKitties: birthedKittiesArray.length });
+		this.calculateMatronWithMaxBirths();
 	}
 
 	// update state based on user input of `fromBlock` & `toBlock` from form; then, query CryptoKitties
@@ -138,13 +139,59 @@ class App extends Component {
 	// search each result from `birthedKittiesArray` by returnValues.matronId
 	// return the matron with most births (inclue birth timestamp, generation, & their genes)
 	// @dev pausing develpment on this -- must fix query limit size when calling Infura
-	/*
 	async calculateMatronWithMaxBirths() {
-		let matronId = await this.state.birthedKittiesArray[0].returnValues.matronId._hex;
-		let matronData = await this.state.cryptoKittiesContract.methods.getKitty(matronId).call();
-		console.log(matronData);
+		const mapMatronToNumberOfBirths = {};
+		const birthedKittiesArray = this.state.birthedKittiesArray;
+		// const testBirthedKittiesArray = [
+		// 	{ returnValues: { matronId: { _hex: 0x1c3b68 } } },
+		// 	{ returnValues: { matronId: { _hex: 0x1c3b68 } } },
+		// 	{ returnValues: { matronId: { _hex: 0x1c3b67 } } },
+		// ];
+		for (let i = 0; i < birthedKittiesArray.length; i++) {
+			let matronId = birthedKittiesArray[i].returnValues.matronId._hex;
+			if (!mapMatronToNumberOfBirths[matronId]) {
+				mapMatronToNumberOfBirths[matronId] = 1;
+			} else {
+				mapMatronToNumberOfBirths[matronId] += 1;
+			}
+		}
+
+		if (Object.keys(mapMatronToNumberOfBirths).length === 0) {
+			return;
+		}
+
+		const matronIdWithMaxBirths = Object.keys(mapMatronToNumberOfBirths).reduce(
+			(a, b) => (mapMatronToNumberOfBirths[a] > mapMatronToNumberOfBirths[b] ? a : b),
+			null
+		);
+		const maxBirths = mapMatronToNumberOfBirths[matronIdWithMaxBirths];
+		const removeMaxMatronFromMapping = mapMatronToNumberOfBirths;
+		delete removeMaxMatronFromMapping[matronIdWithMaxBirths];
+		const checkIfMaxBirthsIsDupe = Object.values(removeMaxMatronFromMapping).find(
+			(numBirths) => numBirths >= maxBirths
+		);
+
+		if (checkIfMaxBirthsIsDupe === undefined) {
+			console.log('Matron w/ max births:');
+			console.log(matronIdWithMaxBirths);
+			const matronWithMaxBirthsData = await this.state.cryptoKittiesContract.methods
+				.getKitty(matronIdWithMaxBirths)
+				.call();
+			const matronGenes = matronWithMaxBirthsData.genes._hex;
+			const matronGeneration = parseInt(Number(matronWithMaxBirthsData.generation._hex), 10);
+			let matronBirthTimestamp = parseInt(Number(matronWithMaxBirthsData.birthTime._hex), 10);
+			matronBirthTimestamp = new Date(matronBirthTimestamp * 1000).toISOString();
+
+			this.setState({ matronId: matronIdWithMaxBirths });
+			this.setState({ matronNumberOfBirthsDuringRange: maxBirths });
+			this.setState({ matronGenes });
+			this.setState({ matronGeneration });
+			this.setState({ matronBirthTimestamp });
+		} else {
+			console.log('Multiple matrons have max number of births');
+			this.setState({ matronId: 'N/A' });
+		}
 	}
-    */
 
 	constructor(props) {
 		super(props);
@@ -157,7 +204,11 @@ class App extends Component {
 			toBlock: null,
 			birthedKittiesArray: [],
 			numberOfBirthedKitties: null,
-			matronWithMaxBirths: null,
+			matronId: null,
+			matronNumberOfBirthsDuringRange: null,
+			matronGenes: null,
+			matronGeneration: null,
+			matronBirthTimestamp: null,
 		};
 	}
 
@@ -178,7 +229,11 @@ class App extends Component {
 					fromBlock={this.state.fromBlock}
 					toBlock={this.state.toBlock}
 					blockQueryRangeStateHandler={this.blockQueryRangeStateHandler}
-					matronWithMaxBirths={this.state.matronWithMaxBirths}
+					matronId={this.state.matronId}
+					matronNumberOfBirthsDuringRange={this.state.matronNumberOfBirthsDuringRange}
+					matronGenes={this.state.matronGenes}
+					matronGeneration={this.state.matronGeneration}
+					matronBirthTimestamp={this.state.matronBirthTimestamp}
 				/>
 			</div>
 		);
