@@ -89,39 +89,78 @@ class App extends Component {
 	// However, it fails when using `currentFromBlock` & `currentToBlock`, as the code is currently shown
 	// ...event though `currentFromBlock` & `currentToBlock` arent assigned same values as `fromBlock` & `toBlock`
 	// The goal for the `else` block is to chunk a range from `fromBlock` to `toBlock` by 10k blocks and iterate
-	async queryCryptoKitties(fromBlock, toBlock) {
-		let birthedKittiesArray;
-		if (toBlock - fromBlock < 10000) {
-			await this.state.cryptoKittiesContract.getPastEvents(
-				'Birth',
-				{ fromBlock, toBlock },
-				async (error, data) => {
-					console.log('Birth event data:');
-					console.log(data);
-					birthedKittiesArray = data;
-				}
-			);
+	getChunkSize(fromBlock, toBlock) {
+		let differenceBetweenBlocks = Math.round((toBlock - fromBlock) / 2);
+		if (differenceBetweenBlocks < 10000) {
+			return differenceBetweenBlocks;
 		} else {
-			// goal is to build an array or obj of chunked block ranges; then, loop & call `getPastEvents`
-			let currentFromBlock = fromBlock;
-			let currentToBlock = toBlock;
-			await this.state.cryptoKittiesContract.getPastEvents(
-				'Birth',
-				{ currentFromBlock, currentToBlock },
-				async (error, data) => {
-					if (error) {
-						console.erorr(error);
-					}
-					console.log('Birth event data:');
-					console.log(data);
-					birthedKittiesArray = data;
-				}
-			);
+			return this.getChunkSize(fromBlock, fromBlock + differenceBetweenBlocks);
 		}
+	}
+
+	chunkQueryBlockRange(fromBlock, toBlock) {
+		const chunkSize = this.getChunkSize(fromBlock, toBlock);
+		let currentFromBlock = fromBlock;
+		let nextBlock = currentFromBlock + chunkSize;
+		let newQueryBlockRanges = [];
+		while (toBlock - (nextBlock + 1) > chunkSize) {
+			newQueryBlockRanges.push([currentFromBlock, nextBlock]);
+			currentFromBlock = nextBlock + 1;
+			nextBlock = currentFromBlock + chunkSize;
+		}
+		let endOfArrayBlockNumber = newQueryBlockRanges[newQueryBlockRanges.length - 1][1];
+		endOfArrayBlockNumber += 1;
+		newQueryBlockRanges.push(
+			[endOfArrayBlockNumber, endOfArrayBlockNumber + chunkSize],
+			[endOfArrayBlockNumber + chunkSize + 1, toBlock]
+		);
+
+		return newQueryBlockRanges;
+	}
+
+	async queryCryptoKitties(fromBlock, toBlock) {
+		const birthedKittiesArray = await this.state.cryptoKittiesContract.getPastEvents(
+			'Birth',
+			{ fromBlock, toBlock },
+			async (error, events) => {
+				if (!error) {
+					console.log('Birth event data:');
+					console.log(events);
+					let eventData = await events;
+					return eventData;
+				} else if (
+					error.message === 'Node error: {"code":-32005,"message":"query returned more than 10000 results"}'
+				) {
+					// Infura query limit of 10k results
+					// build an array chunked block ranges; then, loop & call `getPastEvents` in smaller groups
+					// @dev need to iterate -- testing the first entry to make sure the logic works
+					const blockRanges = this.chunkQueryBlockRange(fromBlock, toBlock);
+					console.log(blockRanges);
+					await this.state.cryptoKittiesContract.getPastEvents(
+						'Birth',
+						{
+							fromBlock: blockRanges[0][0],
+							toBlock: blockRanges[0][1],
+						},
+						async (error, events) => {
+							if (error) {
+								console.erorr(error);
+							}
+							console.log('Birth event data:');
+							console.log(events);
+							let eventData = await events;
+							return eventData;
+						}
+					);
+				} else {
+					console.log(error);
+				}
+			}
+		);
 
 		// save the Birth() event data to state
-		this.setState({ birthedKittiesArray: [...birthedKittiesArray] });
-		this.setState({ numberOfBirthedKitties: birthedKittiesArray.length });
+		this.setStateAsync({ birthedKittiesArray: [...birthedKittiesArray] });
+		this.setStateAsync({ numberOfBirthedKitties: birthedKittiesArray.length });
 		this.calculateMatronWithMaxBirths();
 	}
 
@@ -141,12 +180,12 @@ class App extends Component {
 	// @dev pausing develpment on this -- must fix query limit size when calling Infura
 	async calculateMatronWithMaxBirths() {
 		const mapMatronToNumberOfBirths = {};
-		const birthedKittiesArray = this.state.birthedKittiesArray;
-		// const testBirthedKittiesArray = [
-		// 	{ returnValues: { matronId: { _hex: 0x1c3b68 } } },
-		// 	{ returnValues: { matronId: { _hex: 0x1c3b68 } } },
-		// 	{ returnValues: { matronId: { _hex: 0x1c3b67 } } },
-		// ];
+		// const birthedKittiesArray = this.state.birthedKittiesArray;
+		const birthedKittiesArray = [
+			{ returnValues: { matronId: { _hex: 0x1c3b68 } } },
+			{ returnValues: { matronId: { _hex: 0x1c3b68 } } },
+			{ returnValues: { matronId: { _hex: 0x1c3b67 } } },
+		];
 		for (let i = 0; i < birthedKittiesArray.length; i++) {
 			let matronId = birthedKittiesArray[i].returnValues.matronId._hex;
 			if (!mapMatronToNumberOfBirths[matronId]) {
