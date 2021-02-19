@@ -78,17 +78,65 @@ class App extends Component {
         DESIGN
         Based on sample event history, every ~10k blocks should have less then 10k events returned.
         Thus, the query should first at least attempt if the event data can be returned. If the '10000 results'
-        error is thrown via Infura, then you must iterate by every 10k blocks, starting at `fromBlock` and ending 
+        error is thrown via Infura, then you must iterate by every 10k blocks at most, starting at `fromBlock` and ending 
         at `toBlock` -- each iteration should add to the `birthedKittiesArray`.
-        
-        Once the querying is complete, then all calculated data must be, well, calculated -- this will require
-         some refactoring of `queryCryptoKitties`, its state handler, and a separate a new function for calculations.
     */
-	// @dev This makes no sense -- the `else` block is identical to the `if` block...but returns empty results
-	// Namely, if the `else` block direcly calls `fromBlock` & `toBlock`, it will work
-	// However, it fails when using `currentFromBlock` & `currentToBlock`, as the code is currently shown
-	// ...event though `currentFromBlock` & `currentToBlock` arent assigned same values as `fromBlock` & `toBlock`
-	// The goal for the `else` block is to chunk a range from `fromBlock` to `toBlock` by 10k blocks and iterate
+	// @dev Issue with the try / catch block in terms of updating state.
+	// If no error thrown, then all is good. If when 'more than 10000 results' conditional hit,
+	// the event results come after state is updated...thus, the data calculated is referencing an emptry
+	// array instead of the eventual resolved array with event ddata. Must refactor to handle Promise properly.
+	async queryCryptoKitties(fromBlock, toBlock) {
+		const birthedKittiesArray = [];
+		try {
+			await this.state.cryptoKittiesContract.getPastEvents(
+				'Birth',
+				{ fromBlock, toBlock },
+				async (error, events) => {
+					if (!error) {
+						console.log('Birth event data (1):');
+						let eventData = await events;
+						console.log([...eventData]);
+						birthedKittiesArray.push(...eventData);
+					} else if (
+						error.message ===
+						'Node error: {"code":-32005,"message":"query returned more than 10000 results"}'
+					) {
+						// Infura query limit of 10k results
+						// build an array chunked block ranges; then, loop & call `getPastEvents` in smaller groups
+						// @dev need to iterate -- testing the first entry to make sure the logic works
+						const blockRanges = this.chunkQueryBlockRange(fromBlock, toBlock);
+						console.log(blockRanges);
+						await this.state.cryptoKittiesContract.getPastEvents(
+							'Birth',
+							{
+								fromBlock: blockRanges[0][0],
+								toBlock: blockRanges[0][1],
+							},
+							async (error, events) => {
+								if (!error) {
+									console.log('Birth event data (2):');
+									let eventData = await events;
+									console.log([...eventData]);
+									birthedKittiesArray.push(...eventData);
+								}
+							}
+						);
+					} else {
+						console.log('error in first try');
+						console.log(error);
+						throw error;
+					}
+				}
+			);
+		} catch (error) {
+			console.log('error in first try -- catch block');
+			console.log(error);
+		} finally {
+			return birthedKittiesArray;
+		}
+	}
+
+	// helper function to determine the how to chunk the block ranges (find first chunk value that is <= 10000)
 	getChunkSize(fromBlock, toBlock) {
 		let differenceBetweenBlocks = Math.round((toBlock - fromBlock) / 2);
 		if (differenceBetweenBlocks < 10000) {
@@ -98,6 +146,8 @@ class App extends Component {
 		}
 	}
 
+	// helper function creates block ranges that are of equal size for every sub-array, except the final range
+	// this ensures the Infura error (`return limit exceeded 10000`) does not occur
 	chunkQueryBlockRange(fromBlock, toBlock) {
 		const chunkSize = this.getChunkSize(fromBlock, toBlock);
 		let currentFromBlock = fromBlock;
@@ -118,52 +168,6 @@ class App extends Component {
 		return newQueryBlockRanges;
 	}
 
-	async queryCryptoKitties(fromBlock, toBlock) {
-		const birthedKittiesArray = await this.state.cryptoKittiesContract.getPastEvents(
-			'Birth',
-			{ fromBlock, toBlock },
-			async (error, events) => {
-				if (!error) {
-					console.log('Birth event data:');
-					console.log(events);
-					let eventData = await events;
-					return eventData;
-				} else if (
-					error.message === 'Node error: {"code":-32005,"message":"query returned more than 10000 results"}'
-				) {
-					// Infura query limit of 10k results
-					// build an array chunked block ranges; then, loop & call `getPastEvents` in smaller groups
-					// @dev need to iterate -- testing the first entry to make sure the logic works
-					const blockRanges = this.chunkQueryBlockRange(fromBlock, toBlock);
-					console.log(blockRanges);
-					await this.state.cryptoKittiesContract.getPastEvents(
-						'Birth',
-						{
-							fromBlock: blockRanges[0][0],
-							toBlock: blockRanges[0][1],
-						},
-						async (error, events) => {
-							if (error) {
-								console.erorr(error);
-							}
-							console.log('Birth event data:');
-							console.log(events);
-							let eventData = await events;
-							return eventData;
-						}
-					);
-				} else {
-					console.log(error);
-				}
-			}
-		);
-
-		// save the Birth() event data to state
-		this.setStateAsync({ birthedKittiesArray: [...birthedKittiesArray] });
-		this.setStateAsync({ numberOfBirthedKitties: birthedKittiesArray.length });
-		this.calculateMatronWithMaxBirths();
-	}
-
 	// update state based on user input of `fromBlock` & `toBlock` from form; then, query CryptoKitties
 	blockQueryRangeStateHandler = async ([fromBlock, toBlock]) => {
 		// save fromBlock, toBlock, and Birth() event data to an array
@@ -172,12 +176,20 @@ class App extends Component {
 			this.setState({ toBlock });
 		}
 
-		this.queryCryptoKitties(fromBlock, toBlock);
+		const birthedKittiesArray = await this.queryCryptoKitties(fromBlock, toBlock);
+		// save the Birth() event data to state
+		this.setState({ birthedKittiesArray }, () => {
+			console.log('birthedKittiesArray state updated:');
+			console.log(birthedKittiesArray);
+		});
+		this.setState({
+			numberOfBirthedKitties: birthedKittiesArray.length,
+		});
+		this.calculateMatronWithMaxBirths();
 	};
 
 	// search each result from `birthedKittiesArray` by returnValues.matronId
 	// return the matron with most births (inclue birth timestamp, generation, & their genes)
-	// @dev pausing develpment on this -- must fix query limit size when calling Infura
 	async calculateMatronWithMaxBirths() {
 		const mapMatronToNumberOfBirths = {};
 		// const birthedKittiesArray = this.state.birthedKittiesArray;
