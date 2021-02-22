@@ -87,53 +87,19 @@ class App extends Component {
 	// array instead of the eventual resolved array with event ddata. Must refactor to handle Promise properly.
 	async queryCryptoKitties(fromBlock, toBlock) {
 		const birthedKittiesArray = [];
-		try {
-			await this.state.cryptoKittiesContract.getPastEvents(
-				'Birth',
-				{ fromBlock, toBlock },
-				async (error, events) => {
-					if (!error) {
-						console.log('Birth event data (1):');
-						let eventData = await events;
-						console.log([...eventData]);
-						birthedKittiesArray.push(...eventData);
-					} else if (
-						error.message ===
-						'Node error: {"code":-32005,"message":"query returned more than 10000 results"}'
-					) {
-						// Infura query limit of 10k results
-						// build an array chunked block ranges; then, loop & call `getPastEvents` in smaller groups
-						// @dev need to iterate -- testing the first entry to make sure the logic works
-						const blockRanges = this.chunkQueryBlockRange(fromBlock, toBlock);
-						console.log(blockRanges);
-						await this.state.cryptoKittiesContract.getPastEvents(
-							'Birth',
-							{
-								fromBlock: blockRanges[0][0],
-								toBlock: blockRanges[0][1],
-							},
-							async (error, events) => {
-								if (!error) {
-									console.log('Birth event data (2):');
-									let eventData = await events;
-									console.log([...eventData]);
-									birthedKittiesArray.push(...eventData);
-								}
-							}
-						);
-					} else {
-						console.log('error in first try');
-						console.log(error);
-						throw error;
-					}
-				}
-			);
-		} catch (error) {
-			console.log('error in first try -- catch block');
-			console.log(error);
-		} finally {
-			return birthedKittiesArray;
-		}
+		await this.state.cryptoKittiesContract.getPastEvents('Birth', { fromBlock, toBlock }, (error, events) => {
+			if (!error) {
+				console.log('Birth event data (1):');
+				let eventData = events;
+				console.log([...eventData]);
+				birthedKittiesArray.push(...eventData);
+			} else {
+				throw error;
+			}
+			// error.message === 'Node error: {"code":-32005,"message":"query returned more than 10000 results"}'
+		});
+
+		return birthedKittiesArray;
 	}
 
 	// helper function to determine the how to chunk the block ranges (find first chunk value that is <= 10000)
@@ -176,28 +142,57 @@ class App extends Component {
 			this.setState({ toBlock });
 		}
 
-		const birthedKittiesArray = await this.queryCryptoKitties(fromBlock, toBlock);
-		// save the Birth() event data to state
-		this.setState({ birthedKittiesArray }, () => {
-			console.log('birthedKittiesArray state updated:');
-			console.log(birthedKittiesArray);
-		});
-		this.setState({
-			numberOfBirthedKitties: birthedKittiesArray.length,
-		});
-		this.calculateMatronWithMaxBirths();
+		try {
+			const birthedKittiesArray = await this.queryCryptoKitties(fromBlock, toBlock);
+			// save the Birth() event data to state
+			this.setState({ birthedKittiesArray }, () => {
+				console.log('birthedKittiesArray state updated (1):');
+				console.log(birthedKittiesArray);
+			});
+			this.setState({
+				numberOfBirthedKitties: birthedKittiesArray.length,
+			});
+			this.calculateMatronWithMaxBirths();
+		} catch (error) {
+			console.log('error in blockQueryRangeStateHandler');
+			console.log(error);
+			try {
+				if (
+					error.message === 'Node error: {"code":-32005,"message":"query returned more than 10000 results"}'
+				) {
+					const blockRanges = this.chunkQueryBlockRange(fromBlock, toBlock);
+					console.log(blockRanges);
+					const birthedKittiesArray = [];
+					for (let i = 0; i < blockRanges.length; i++) {
+						const kittiesDuringRange = await this.queryCryptoKitties(blockRanges[i][0], blockRanges[i][1]);
+						birthedKittiesArray.push(...kittiesDuringRange);
+					}
+					// save the Birth() event data to state
+					this.setState({ birthedKittiesArray }, () => {
+						console.log('birthedKittiesArray state updated (2):');
+						console.log(birthedKittiesArray);
+					});
+					this.setState({
+						numberOfBirthedKitties: birthedKittiesArray.length,
+					});
+					this.calculateMatronWithMaxBirths();
+				}
+			} catch {
+				console.log(error);
+			}
+		}
 	};
 
 	// search each result from `birthedKittiesArray` by returnValues.matronId
 	// return the matron with most births (inclue birth timestamp, generation, & their genes)
 	async calculateMatronWithMaxBirths() {
 		const mapMatronToNumberOfBirths = {};
-		// const birthedKittiesArray = this.state.birthedKittiesArray;
-		const birthedKittiesArray = [
-			{ returnValues: { matronId: { _hex: 0x1c3b68 } } },
-			{ returnValues: { matronId: { _hex: 0x1c3b68 } } },
-			{ returnValues: { matronId: { _hex: 0x1c3b67 } } },
-		];
+		const birthedKittiesArray = this.state.birthedKittiesArray;
+		// const birthedKittiesArray = [
+		// 	{ returnValues: { matronId: { _hex: 0x1c3b68 } } },
+		// 	{ returnValues: { matronId: { _hex: 0x1c3b68 } } },
+		// 	{ returnValues: { matronId: { _hex: 0x1c3b67 } } },
+		// ];
 		for (let i = 0; i < birthedKittiesArray.length; i++) {
 			let matronId = birthedKittiesArray[i].returnValues.matronId._hex;
 			if (!mapMatronToNumberOfBirths[matronId]) {
@@ -240,7 +235,12 @@ class App extends Component {
 			this.setState({ matronBirthTimestamp });
 		} else {
 			console.log('Multiple matrons have max number of births');
+			this.setState({ matronNumberOfBirthsDuringRange: 'N/A' });
 			this.setState({ matronId: 'N/A' });
+			this.setState({ matronNumberOfBirthsDuringRange: 'N/A' });
+			this.setState({ matronGenes: 'N/A' });
+			this.setState({ matronGeneration: 'N/A' });
+			this.setState({ matronBirthTimestamp: 'N/A' });
 		}
 	}
 
