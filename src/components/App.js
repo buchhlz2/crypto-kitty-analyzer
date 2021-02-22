@@ -242,7 +242,7 @@ class App extends Component {
 			console.log('Multiple matrons have max number of births');
 
 			this.setState({
-				matronNumberOfBirthsDuringRange: 'N/A - max number of births is shared by multiple matrons',
+				matronNumberOfBirthsDuringRange: null,
 			});
 			this.setState({ matronId: null });
 			this.setState({ matronGenes: null });

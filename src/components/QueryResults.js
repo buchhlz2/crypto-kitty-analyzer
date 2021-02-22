@@ -27,7 +27,11 @@ class QueryResults extends Component {
 												<td>{this.props.fromBlock}</td>
 												<td>{this.props.toBlock}</td>
 												<td>{this.props.numberOfBirthedKitties}</td>
-												<td>{this.props.matronNumberOfBirthsDuringRange}</td>
+												<td>
+													{this.props.matronNumberOfBirthsDuringRange
+														? this.props.matronNumberOfBirthsDuringRange
+														: 'N/A - max number of births is shared by multiple matrons'}
+												</td>
 											</tr>
 										</tbody>
 									</table>
