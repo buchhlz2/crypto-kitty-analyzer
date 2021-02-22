@@ -61,6 +61,7 @@ class App extends Component {
 
 	// instantiate smart contract & load metadata
 	async loadBlockchainData() {
+		this.setState({ loadingMetadata: true });
 		const web3 = new Web3(`wss://mainnet.infura.io/ws/v3/${infuraProjectId}`);
 
 		// load smart contract
@@ -70,6 +71,12 @@ class App extends Component {
 		this.setState({ name });
 		const totalSupply = await cryptoKittiesContract.methods.totalSupply().call();
 		this.setState({ totalSupply: parseInt(totalSupply._hex) });
+		const secondsPerBlock = await cryptoKittiesContract.methods.secondsPerBlock().call();
+		this.setState({ secondsPerBlock: parseInt(secondsPerBlock._hex) });
+		const totalNumberCurrentlyPregnantKitties = await cryptoKittiesContract.methods.pregnantKitties().call();
+		this.setState({ totalNumberCurrentlyPregnantKitties: parseInt(totalNumberCurrentlyPregnantKitties._hex) });
+
+		this.setState({ loadingMetadata: false });
 	}
 
 	// query Eth mainnet for event `Birth()` using user-specfied startingBlock and endingBlock
@@ -136,7 +143,9 @@ class App extends Component {
 
 	// update state based on user input of `fromBlock` & `toBlock` from form; then, query CryptoKitties
 	blockQueryRangeStateHandler = async ([fromBlock, toBlock]) => {
+		this.setState({ queryHasBeenFired: true });
 		// save fromBlock, toBlock, and Birth() event data to an array
+		this.setState({ awaitingBlockchainQueryResponse: true });
 		if ((await fromBlock) && (await toBlock)) {
 			this.setState({ fromBlock });
 			this.setState({ toBlock });
@@ -181,6 +190,7 @@ class App extends Component {
 				console.log(error);
 			}
 		}
+		this.setState({ awaitingBlockchainQueryResponse: false });
 	};
 
 	// search each result from `birthedKittiesArray` by returnValues.matronId
@@ -188,11 +198,6 @@ class App extends Component {
 	async calculateMatronWithMaxBirths() {
 		const mapMatronToNumberOfBirths = {};
 		const birthedKittiesArray = this.state.birthedKittiesArray;
-		// const birthedKittiesArray = [
-		// 	{ returnValues: { matronId: { _hex: 0x1c3b68 } } },
-		// 	{ returnValues: { matronId: { _hex: 0x1c3b68 } } },
-		// 	{ returnValues: { matronId: { _hex: 0x1c3b67 } } },
-		// ];
 		for (let i = 0; i < birthedKittiesArray.length; i++) {
 			let matronId = birthedKittiesArray[i].returnValues.matronId._hex;
 			if (!mapMatronToNumberOfBirths[matronId]) {
@@ -235,22 +240,30 @@ class App extends Component {
 			this.setState({ matronBirthTimestamp });
 		} else {
 			console.log('Multiple matrons have max number of births');
-			this.setState({ matronNumberOfBirthsDuringRange: 'N/A' });
-			this.setState({ matronId: 'N/A' });
-			this.setState({ matronNumberOfBirthsDuringRange: 'N/A' });
-			this.setState({ matronGenes: 'N/A' });
-			this.setState({ matronGeneration: 'N/A' });
-			this.setState({ matronBirthTimestamp: 'N/A' });
+
+			this.setState({
+				matronNumberOfBirthsDuringRange: 'N/A - max number of births is shared by multiple matrons',
+			});
+			this.setState({ matronId: null });
+			this.setState({ matronGenes: null });
+			this.setState({ matronGeneration: null });
+			this.setState({ matronBirthTimestamp: null });
+			console.log(this.state.matronId);
 		}
 	}
 
 	constructor(props) {
 		super(props);
 		this.state = {
-			loading: false,
+			loadingMetadata: false,
+			awaitingBlockchainQueryResponse: false,
+			queryHasBeenFired: false,
 			account: null,
 			cryptoKittiesContract: null,
 			name: null,
+			totalSupply: null,
+			secondsPerBlock: null,
+			totalNumberCurrentlyPregnantKitties: null,
 			fromBlock: null,
 			toBlock: null,
 			birthedKittiesArray: [],
@@ -275,6 +288,8 @@ class App extends Component {
 					cryptoKittiesContract={this.state.cryptoKittiesContract}
 					name={this.state.name}
 					totalSupply={this.state.totalSupply}
+					secondsPerBlock={this.state.secondsPerBlock}
+					totalNumberCurrentlyPregnantKitties={this.state.totalNumberCurrentlyPregnantKitties}
 					birthedKittiesArray={this.state.birthedKittiesArray}
 					numberOfBirthedKitties={this.state.numberOfBirthedKitties}
 					fromBlock={this.state.fromBlock}
@@ -285,6 +300,9 @@ class App extends Component {
 					matronGenes={this.state.matronGenes}
 					matronGeneration={this.state.matronGeneration}
 					matronBirthTimestamp={this.state.matronBirthTimestamp}
+					loadingMetadata={this.state.loadingMetadata}
+					awaitingBlockchainQueryResponse={this.state.awaitingBlockchainQueryResponse}
+					queryHasBeenFired={this.state.queryHasBeenFired}
 				/>
 			</div>
 		);
