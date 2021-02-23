@@ -1,1 +1,4 @@
 /* Styles go here */
+.text-danger {
+	color: #ff3d41 !important;
+}

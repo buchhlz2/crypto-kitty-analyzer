@@ -10,15 +10,18 @@ class Main extends Component {
 				<div className='row'>
 					<main role='main' className='col-lg-12 ml-auto mr-auto' style={{ maxWidth: '500px' }}>
 						<Metadata
-							name={this.props.name}
+							loadingMetadata={this.props.loadingMetadata}
+							contractName={this.props.contractName}
 							totalSupply={this.props.totalSupply}
 							secondsPerBlock={this.props.secondsPerBlock}
 							totalNumberCurrentlyPregnantKitties={this.props.totalNumberCurrentlyPregnantKitties}
-							loadingMetadata={this.props.loadingMetadata}
 						/>
-						<QueryForm blockQueryRangeStateHandler={this.props.blockQueryRangeStateHandler} />
+						<QueryForm blockQueryStateHandler={this.props.blockQueryStateHandler} />
 						{this.props.queryHasBeenFired ? (
 							<QueryResults
+								awaitingBlockchainQueryResponse={this.props.awaitingBlockchainQueryResponse}
+								queryProgress={this.props.queryProgress}
+								queryError={this.props.queryError}
 								fromBlock={this.props.fromBlock}
 								toBlock={this.props.toBlock}
 								numberOfBirthedKitties={this.props.numberOfBirthedKitties}
@@ -27,8 +30,6 @@ class Main extends Component {
 								matronGenes={this.props.matronGenes}
 								matronGeneration={this.props.matronGeneration}
 								matronBirthTimestamp={this.props.matronBirthTimestamp}
-								awaitingBlockchainQueryResponse={this.props.awaitingBlockchainQueryResponse}
-								queryProgress={this.props.queryProgress}
 							/>
 						) : (
 							''

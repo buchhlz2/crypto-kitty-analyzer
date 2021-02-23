@@ -21,7 +21,7 @@ class Metadata extends Component {
 											<th scope='col'># Kitties Currently Pregnant</th>
 										</tr>
 										<tr>
-											<td>{this.props.name}</td>
+											<td>{this.props.contractName}</td>
 											<td>{this.props.totalSupply}</td>
 											<td>{this.props.secondsPerBlock}</td>
 											<td>{this.props.totalNumberCurrentlyPregnantKitties}</td>

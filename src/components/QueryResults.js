@@ -11,25 +11,30 @@ class QueryResults extends Component {
 						<div className='container col-sm-12 mr-auto ml-auto'>
 							<Loading />
 							<br></br>
-							{console.log(this.props.queryProgress > 0)}
 							{this.props.queryProgress > 0 ? (
 								<ProgressBar queryProgress={this.props.queryProgress} />
 							) : (
 								''
 							)}
 						</div>
+					) : this.props.queryError ? (
+						<div className='container col-sm-12 mr-auto ml-auto'>
+							<h6 className='text-muted text-danger text-center'>
+								Please reduce your query's block range.
+							</h6>
+						</div>
 					) : (
 						<div className='content mr-auto ml-auto'>
 							<div>
 								<h3 className='text-center'>Results:</h3>
 
-								<h4>Basic Information:</h4>
+								<h4>General Info:</h4>
 								<div className='table-responsive'>
 									<table className='table'>
 										<tbody>
 											<tr>
-												<th scope='col'>Start Block</th>
-												<th scope='col'>End Block</th>
+												<th scope='col'>Starting Block</th>
+												<th scope='col'>Ending Block</th>
 												<th scope='col'>Total # of Births</th>
 												<th scope='col'># Births by Max Matron</th>
 											</tr>
@@ -38,7 +43,9 @@ class QueryResults extends Component {
 												<td>{this.props.toBlock}</td>
 												<td>{this.props.numberOfBirthedKitties}</td>
 												<td>
-													{this.props.matronNumberOfBirthsDuringRange
+													{this.props.numberOfBirthedKitties === 0
+														? 'N/A'
+														: this.props.matronNumberOfBirthsDuringRange
 														? this.props.matronNumberOfBirthsDuringRange
 														: 'N/A - max number of births is shared by multiple matrons'}
 												</td>
