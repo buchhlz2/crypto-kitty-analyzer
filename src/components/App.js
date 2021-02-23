@@ -11,7 +11,7 @@ import Navbar from './Navbar';
 import Main from './Main';
 import './App.css';
 
-const infuraProjectId = '494a5be2da0941a682ddaa9b49ba051a';
+const infuraProjectId = process.env.REACT_APP_INFURA_PROJECT_ID;
 const CryptoKittiesAbi = require('../abis/CryptoKitties.json');
 const CryptoKittiesAddress = '0x06012c8cf97bead5deae237070f9587f8e7a266d';
 class App extends Component {

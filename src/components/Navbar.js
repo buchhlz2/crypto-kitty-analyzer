@@ -14,7 +14,7 @@ class Navbar extends Component {
 							<button
 								className='btn btn-secondary btn-sm'
 								onClick={async () => {
-									let account = await this.props.connectWallet();
+									let account = await this.props.connectAccount();
 									this.props.accountStateHandler(account);
 								}}
 							>
