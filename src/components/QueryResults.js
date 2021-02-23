@@ -1,15 +1,25 @@
 import React, { Component } from 'react';
 import Loading from './Loading.js';
+import ProgressBar from './ProgressBar.js';
 
 class QueryResults extends Component {
 	render() {
 		return (
 			<div className='container-fluid mt-5'>
 				<div className='row'>
-					<div className='content mr-auto ml-auto'>
-						{this.props.awaitingBlockchainQueryResponse ? (
+					{this.props.awaitingBlockchainQueryResponse ? (
+						<div className='container col-sm-12 mr-auto ml-auto'>
 							<Loading />
-						) : (
+							<br></br>
+							{console.log(this.props.queryProgress > 0)}
+							{this.props.queryProgress > 0 ? (
+								<ProgressBar queryProgress={this.props.queryProgress} />
+							) : (
+								''
+							)}
+						</div>
+					) : (
+						<div className='content mr-auto ml-auto'>
 							<div>
 								<h3 className='text-center'>Results:</h3>
 
@@ -75,8 +85,8 @@ class QueryResults extends Component {
 									''
 								)}
 							</div>
-						)}
-					</div>
+						</div>
+					)}
 				</div>
 			</div>
 		);

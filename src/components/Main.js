@@ -28,6 +28,7 @@ class Main extends Component {
 								matronGeneration={this.props.matronGeneration}
 								matronBirthTimestamp={this.props.matronBirthTimestamp}
 								awaitingBlockchainQueryResponse={this.props.awaitingBlockchainQueryResponse}
+								queryProgress={this.props.queryProgress}
 							/>
 						) : (
 							''

@@ -144,8 +144,10 @@ class App extends Component {
 	// update state based on user input of `fromBlock` & `toBlock` from form; then, query CryptoKitties
 	blockQueryRangeStateHandler = async ([fromBlock, toBlock]) => {
 		this.setState({ queryHasBeenFired: true });
-		// save fromBlock, toBlock, and Birth() event data to an array
 		this.setState({ awaitingBlockchainQueryResponse: true });
+		this.setState({ queryProgress: 0 });
+
+		// save fromBlock, toBlock, and Birth() event data to an array
 		if ((await fromBlock) && (await toBlock)) {
 			this.setState({ fromBlock });
 			this.setState({ toBlock });
@@ -175,6 +177,7 @@ class App extends Component {
 					for (let i = 0; i < blockRanges.length; i++) {
 						const kittiesDuringRange = await this.queryCryptoKitties(blockRanges[i][0], blockRanges[i][1]);
 						birthedKittiesArray.push(...kittiesDuringRange);
+						this.setState({ queryProgress: (i / blockRanges.length) * 100 });
 					}
 					// save the Birth() event data to state
 					this.setState({ birthedKittiesArray }, () => {
@@ -257,6 +260,7 @@ class App extends Component {
 		this.state = {
 			loadingMetadata: false,
 			awaitingBlockchainQueryResponse: false,
+			queryProgress: 0,
 			queryHasBeenFired: false,
 			account: null,
 			cryptoKittiesContract: null,
@@ -302,6 +306,7 @@ class App extends Component {
 					matronBirthTimestamp={this.state.matronBirthTimestamp}
 					loadingMetadata={this.state.loadingMetadata}
 					awaitingBlockchainQueryResponse={this.state.awaitingBlockchainQueryResponse}
+					queryProgress={this.state.queryProgress}
 					queryHasBeenFired={this.state.queryHasBeenFired}
 				/>
 			</div>
