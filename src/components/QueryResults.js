@@ -68,17 +68,14 @@ class QueryResults extends Component {
 													<tr>
 														<td>{this.props.matronId}</td>
 														<td id='matron-genes'>
-															{// trucate matron genes BigNumber
+															{// truncate matron genes BigNumber
 															this.props.matronGenes
-																? this.props.matronGenes ===
-																  '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
-																	? '0x00'
-																	: this.props.matronGenes.slice(0, 6) +
-																	  '...' +
-																	  this.props.matronGenes.slice(
-																			this.props.matronGenes.length - 4,
-																			this.props.matronGenes.length
-																	  )
+																? this.props.matronGenes.slice(0, 6) +
+																  '...' +
+																  this.props.matronGenes.slice(
+																		this.props.matronGenes.length - 4,
+																		this.props.matronGenes.length
+																  )
 																: ''}
 														</td>
 														<td>{this.props.matronGeneration}</td>
