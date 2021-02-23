@@ -6,7 +6,7 @@ Users input a `startingBlock` and `endingBlock` as arguments, and the app return
 
 ## Demo
 
-Deployed on Heroku: [here](https://warm-oasis-05569.herokuapp.com/)
+Deployed on Netlify: [here](https://angry-carson-3ff31e.netlify.app/)
 ![](demo/crypto-kitties-demo.gif)
 
 ## Smart Contract Details
