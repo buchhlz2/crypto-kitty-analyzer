@@ -28,12 +28,10 @@ class App extends Component {
 			web3 = new Web3(window.ethereum);
 		} else if (window.web3) {
 			web3 = new Web3(window.web3.currentProvider);
-		} else {
-			window.alert('Non-Ethereum browser detected. You should consider trying MetaMask!');
 		}
 		// load accounts
-		const accounts = await web3.eth.getAccounts();
-		if (accounts) {
+		if (web3) {
+			const accounts = await web3.eth.getAccounts();
 			this.setState({ account: accounts[0] });
 		}
 	}
@@ -50,9 +48,12 @@ class App extends Component {
 		} else {
 			window.alert('Non-Ethereum browser detected. You should consider trying MetaMask!');
 		}
+
 		// Load accounts
-		const accounts = await web3.eth.getAccounts();
-		return accounts[0];
+		if (web3) {
+			const accounts = await web3.eth.getAccounts();
+			return accounts[0];
+		}
 	}
 
 	// State helper used when user click on 'Connect' button in child component
