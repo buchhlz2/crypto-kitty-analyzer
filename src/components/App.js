@@ -68,17 +68,20 @@ class App extends Component {
 
 		// Load smart contract & miscellanous metadata
 		const cryptoKittiesContract = new web3.eth.Contract(CryptoKittiesAbi, CryptoKittiesAddress);
-		this.setState({ cryptoKittiesContract });
 		const contractName = await cryptoKittiesContract.methods.name().call();
-		this.setState({ contractName });
 		const totalSupply = await cryptoKittiesContract.methods.totalSupply().call();
-		this.setState({ totalSupply: parseInt(totalSupply._hex) });
 		const secondsPerBlock = await cryptoKittiesContract.methods.secondsPerBlock().call();
-		this.setState({ secondsPerBlock: parseInt(secondsPerBlock._hex) });
 		const totalNumberCurrentlyPregnantKitties = await cryptoKittiesContract.methods.pregnantKitties().call();
-		this.setState({ totalNumberCurrentlyPregnantKitties: parseInt(totalNumberCurrentlyPregnantKitties._hex) });
 
-		this.setState({ loadingMetadata: false });
+		// Set state to smart contract data & set `loadingMetadata` to false
+		this.setState({
+			cryptoKittiesContract,
+			contractName,
+			totalSupply: parseInt(totalSupply._hex),
+			secondsPerBlock: parseInt(secondsPerBlock._hex),
+			totalNumberCurrentlyPregnantKitties: parseInt(totalNumberCurrentlyPregnantKitties._hex),
+			loadingMetadata: false,
+		});
 	}
 
 	// Query Eth mainnet for event `Birth()` using user-specfied startingBlock and endingBlock
@@ -143,9 +146,9 @@ class App extends Component {
 	}
 
 	// Update query state based on user input from input form, using `fromBlock` & `toBlock`
-	// @dev Created pagination-type feature since Infura does not allow more than 10000 query results
+	// @dev Create pagination-type feature since Infura does not allow more than 10000 query results
 	/*
-        DESIGN
+        DESIGN BACKGROUND
         Based on sample event history, every ~10k blocks should have less then 10k events returned.
         Thus, the query should first at least attempt if the event data can be returned. If the '10000 results'
         error is thrown via Infura, then you must iterate by every 10k blocks at most, starting at `fromBlock` 
@@ -158,31 +161,34 @@ class App extends Component {
         together, which would reduce the number of Infura calls.
     */
 	blockQueryStateHandler = async ([fromBlock, toBlock]) => {
-		// Set current query state while the query is running, which impacts component rendering
-		this.setState({ queryHasBeenFired: true });
-		this.setState({ awaitingBlockchainQueryResponse: true });
-		this.setState({ queryProgress: 0 });
-		this.setState({ queryError: false });
-		// Reset state for matron & birthed kitty array
-		this.setState({ matronId: null });
-		this.setState({ matronNumberOfBirthsDuringRange: null });
-		this.setState({ matronGenes: null });
-		this.setState({ matronGeneration: null });
-		this.setState({ matronBirthTimestamp: null });
-		this.setState({ birthedKittiesArray: [] });
-		this.setState({ numberOfBirthedKitties: null });
-
-		// Save `fromBlock` & `toBlock` to state
-		this.setState({ fromBlock });
-		this.setState({ toBlock });
+		this.setState({
+			// Set current query state while the query is running, which impacts component rendering
+			queryHasBeenFired: true,
+			awaitingBlockchainQueryResponse: true,
+			queryProgress: 0,
+			queryError: false,
+			// Reset state for matron & birthed kitty array
+			matronId: null,
+			matronNumberOfBirthsDuringRange: null,
+			matronGenes: null,
+			matronGeneration: null,
+			matronBirthTimestamp: null,
+			birthedKittiesArray: [],
+			numberOfBirthedKitties: null,
+			// Save `fromBlock` & `toBlock` to state
+			fromBlock,
+			toBlock,
+		});
 
 		// First, try to call `queryCryptoKitties` using the inital block ranges
 		// If an Infura 'too many requests' error is thrown, chunk the query & call `queryCryptoKitties` with smaller block ranges
 		try {
 			const birthedKittiesArray = await this.queryCryptoKitties(fromBlock, toBlock);
 			// Save the Birth() event data to state & execute further calculations
-			this.setState({ birthedKittiesArray });
-			this.setState({ numberOfBirthedKitties: birthedKittiesArray.length });
+			this.setState({
+				birthedKittiesArray,
+				numberOfBirthedKitties: birthedKittiesArray.length,
+			});
 			this.calculateMatronWithMaxBirths();
 		} catch (error) {
 			try {
@@ -199,8 +205,10 @@ class App extends Component {
 						this.setState({ queryProgress: (i / blockRanges.length) * 100 });
 					}
 					// Save the Birth() event data to state & execute further calculations
-					this.setState({ birthedKittiesArray });
-					this.setState({ numberOfBirthedKitties: birthedKittiesArray.length });
+					this.setState({
+						birthedKittiesArray,
+						numberOfBirthedKitties: birthedKittiesArray.length,
+					});
 					this.calculateMatronWithMaxBirths();
 				}
 			} catch {
@@ -262,11 +270,13 @@ class App extends Component {
 			let matronBirthTimestamp = parseInt(Number(matronWithMaxBirthsData.birthTime._hex), 10);
 			matronBirthTimestamp = new Date(matronBirthTimestamp * 1000).toISOString();
 
-			this.setState({ matronId: matronIdWithMaxBirths });
-			this.setState({ matronNumberOfBirthsDuringRange: maxBirths });
-			this.setState({ matronGenes });
-			this.setState({ matronGeneration });
-			this.setState({ matronBirthTimestamp });
+			this.setState({
+				matronId: matronIdWithMaxBirths,
+				matronNumberOfBirthsDuringRange: maxBirths,
+				matronGenes,
+				matronGeneration,
+				matronBirthTimestamp,
+			});
 		}
 	}
 
