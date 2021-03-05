@@ -1,3 +1,4 @@
+// Test connencting to web3 & return data (independent of App but using same functions)
 const Web3 = require('web3');
 const infuraProjectId = '494a5be2da0941a682ddaa9b49ba051a';
 const CryptoKittiesAbi = require('../abis/CryptoKitties.json');
@@ -31,5 +32,27 @@ describe('Load CryptoKitties contract metadata', () => {
 	it('has correct secondsPerBlock', async () => {
 		secondsPerBlock = await contract.methods.secondsPerBlock().call();
 		expect(parseInt(secondsPerBlock)).toEqual(15);
+	});
+});
+
+// 2. Test cases for querying CryptoKitties smart contract
+// (a) correct number of birthed kitties during block range
+describe('Query CryptoKitties data', () => {
+	describe('between blocks 11838307 and 11845776', () => {
+		const fromBlock = 11838307;
+		const toBlock = 11845776;
+		it('has correct number of birthed kitties during range', async () => {
+			const birthedKittiesArray = [];
+			await contract.getPastEvents('Birth', { fromBlock, toBlock }, (error, events) => {
+				if (!error) {
+					let eventData = events;
+					birthedKittiesArray.push(...eventData);
+				} else {
+					throw error;
+				}
+			});
+			const numberOfBirthedKitties = birthedKittiesArray.length;
+			expect(numberOfBirthedKitties).toEqual(4);
+		});
 	});
 });
