@@ -1,9 +1,8 @@
 const { assert } = require('chai');
-
 const Web3 = require('web3');
-const App = require('../src/components/App.js');
+
 const infuraProjectId = '494a5be2da0941a682ddaa9b49ba051a';
-const CryptoKittiesAbi = require('../src/abis/CryptoKitties.json');
+const CryptoKittiesAbi = require('../abis/CryptoKitties.json');
 const CryptoKittiesAddress = '0x06012c8cf97bead5deae237070f9587f8e7a266d';
 
 const web3 = new Web3(`wss://mainnet.infura.io/ws/v3/${infuraProjectId}`);
@@ -12,16 +11,16 @@ require('chai')
 	.use(require('chai-as-promised'))
 	.should();
 
-// 1. Test cases for 'loadBlockchainData'
-// (a) name === 'CryptoKitties'
-// (b) totalSupply === 1996000
+// 1. Test cases for 'loadSmartContract'
+// (a) contract name === 'CryptoKitties'
+// (b) totalSupply is valid
 // (c) secondsPerBlock === 15
 
 describe('Load CryptoKitties contract metadata', async () => {
 	let contract, name, totalSupply, secondsPerBlock;
 
 	before(async () => {
-		// load contracts
+		// load contract
 		const cryptoKittiesContract = new web3.eth.Contract(CryptoKittiesAbi, CryptoKittiesAddress);
 		contract = await cryptoKittiesContract;
 	});
@@ -31,9 +30,11 @@ describe('Load CryptoKitties contract metadata', async () => {
 		assert.equal(name, 'CryptoKitties');
 	});
 
-	it('has correct total supply', async () => {
+	it('has valid totalSupply', async () => {
 		totalSupply = await contract.methods.totalSupply().call();
-		assert.equal(totalSupply, 1996000);
+		assert.property(totalSupply, '_hex', 'totalSupply has propery _hex');
+		assert.match(totalSupply._hex, /^0x/, 'totalSupply._hex is a hex value');
+		assert.isAbove(parseInt(totalSupply._hex), 0, 'totalSupply is greater than 0');
 	});
 
 	it('has correct secondsPerBlock', async () => {
